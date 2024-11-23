@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import seaborn as sns
+import pandas as pd
 import numpy as np
 import math
 
@@ -140,3 +141,46 @@ def plot_outliers(df):
     if n_plots % 2 != 0:
         fig.delaxes(axes[-1])
     plt.tight_layout()
+
+
+def value_counts(df, col):
+
+    return pd.concat([df[col].value_counts(), df[col].value_counts(normalize=True).round(2)], axis=1)
+
+
+def quick_plot_numeric(df, col, num=10, size=(10,5), rotation=45):
+
+    max_ = df[col].max()
+    min_ = df[col].min()
+    n = (max_ - min_) // num
+
+    if n < 2:
+        return
+    
+    plot_numeric_distribution(df, min_, max_, col, n, size=size, rotation=rotation)
+
+
+def plot_groupby_median(df, groupby, col, max_entries, size=(12, 6), palette='mako'):
+
+    median_by = (
+        df.groupby(groupby)[col]
+        .median()
+        .sort_values()
+        .reset_index()
+    )
+
+    plt.figure(figsize=size)
+    sns.barplot(
+        data=median_by.iloc[:max_entries],
+        x=col,
+        y=groupby,
+        palette=palette,
+        edgecolor="black"
+    )
+
+    plt.title(f'{col} median per {groupby}')
+    plt.xlabel('')
+    plt.ylabel('')
+    plt.tight_layout()
+
+    plt.show()
