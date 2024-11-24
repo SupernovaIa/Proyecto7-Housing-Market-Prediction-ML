@@ -341,3 +341,125 @@ class RegressionModels:
         # Best model
         print("Best model:")
         print(self.best_model[model])
+
+
+class FullRegressor:
+
+    def __init__(self, df, target_variable):
+        """
+        Initializes the class with the dataset, target variable, and a collection of regression models.
+
+        Parameters:
+        - df (pandas.DataFrame): The input dataset containing features and the target variable.
+        - target_variable (str): The name of the target variable column in the dataset.
+        """
+
+        self.df = df
+        self.target_variable = target_variable
+        self.X = df.drop(target_variable, axis=1)
+        self.y = df[target_variable]
+
+        # Model configuration
+        self.models = {
+            "linear": LinearRegression(n_jobs=-1),
+            "tree": DecisionTreeRegressor(),
+            "random_forest": RandomForestRegressor(),
+            "gradient_boosting": GradientBoostingRegressor(),
+            "xgboost": xgb.XGBRegressor(),
+        }
+
+        # Prediction and best models storage
+        self.predictions = {model: {"train": None, "test": None} for model in self.models}
+        self.best_model = {model: None for model in self.models}
+        self.results = None
+
+
+    def model_fit(self, model, param_grid=None):
+        """
+        Fits the specified regression model to the dataset, optionally performing hyperparameter optimization.
+
+        Parameters:
+        - model (str): The name of the model to fit. Must be a key in `self.models`.
+        - param_grid (dict, optional): A dictionary specifying the hyperparameter grid for the model. If provided, GridSearchCV is used for hyperparameter optimization.
+
+        Returns:
+        - dict (optional): Cross-validation results from GridSearchCV if `param_grid` is provided.
+
+        Raises:
+        - ValueError: If the specified model is not recognized.
+        """
+
+        if model not in self.models:
+            raise ValueError(f"Modelo '{model}' no reconocido.")
+
+        estimator = self.models[model]
+
+        if param_grid:
+            grid_search = GridSearchCV(estimator, param_grid, cv=5, scoring="neg_mean_squared_error", n_jobs=-1)
+            grid_search.fit(self.X, self.y)
+            self.best_model[model] = grid_search.best_estimator_
+        else:
+            estimator.fit(self.X, self.y)
+            self.best_model[model] = estimator
+
+        # Predictions
+        self.predictions[model]["train"] = self.best_model[model].predict(self.X)
+
+        if param_grid:
+            return grid_search.cv_results_
+
+
+    def get_results(self):
+        """
+        Aggregates and returns the evaluation results for all fitted models.
+
+        Returns:
+        - pandas.DataFrame: A concatenated DataFrame containing evaluation metrics for training predictions of each fitted model.
+
+        Raises:
+        - ValueError: If no models have been fitted and predictions are unavailable.
+        """
+        results = []
+
+        for model, pred in self.predictions.items():
+            if pred["train"] is not None:
+                results.extend([
+                    df_results(self.y, pred["train"], "Train", model),
+                ])
+
+        if not results:
+            raise ValueError("Must fit at least one model to get results.")
+        
+        self.results = pd.concat(results, axis=0)
+        return self.results
+    
+
+    def get_metrics(self, model):
+        """
+        Calculates and returns evaluation metrics for a specified model's training predictions.
+
+        Parameters:
+        - model (str): The name of the model for which metrics are calculated. Must be a key in `self.predictions`.
+
+        Returns:
+        - pandas.DataFrame: A transposed DataFrame containing evaluation metrics (R2, MAE, RMSE) for the model's training predictions.
+
+        Raises:
+        - ValueError: If the specified model is not recognized or has not been fitted.
+        """
+
+        if model not in self.predictions:
+            raise ValueError(f"Modelo '{model}' no reconocido.")
+
+        pred = self.predictions[model]
+        if pred["train"] is None:
+            raise ValueError(f"Debe ajustar el modelo '{model}' antes de calcular métricas.")
+
+        metrics = {
+            "train": {
+                "R2": r2_score(self.y, pred["train"]),
+                "MAE": mean_absolute_error(self.y, pred["train"]),
+                "RMSE": np.sqrt(mean_squared_error(self.y, pred["train"])),
+            }
+        }
+        return pd.DataFrame(metrics).T
