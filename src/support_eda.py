@@ -1,11 +1,37 @@
-import matplotlib.pyplot as plt
-import seaborn as sns
+# Data processing  
+# -----------------------------------------------------------------------
 import pandas as pd
 import numpy as np
+
+# Visualization  
+# -----------------------------------------------------------------------
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Mathematics  
+# -----------------------------------------------------------------------
 import math
 
 
 def plot_numeric_distribution(df, first, last, col, n=1, size = (10, 5), rotation=45):
+    """
+    Plots the distribution of numeric values in a specified column within a given range, using aligned bins.
+
+    Parameters:
+    - df (pd.DataFrame): The DataFrame containing the data.
+    - first (int or float): The lower bound of the range to plot.
+    - last (int or float): The upper bound of the range to plot.
+    - col (str): The name of the column to analyze.
+    - n (int, optional): The bin width for the histogram. Defaults to 1.
+    - size (tuple, optional): The size of the plot as (width, height). Defaults to (10, 5).
+    - rotation (int, optional): The rotation angle for x-axis labels. Defaults to 45.
+
+    Raises:
+    - ValueError: If `n` is not positive or if `first` is not less than `last`.
+
+    Returns:
+    - None: Displays a histogram of the numeric distribution within the specified range.
+    """
     # Validate inputs
     if n <= 0:
         raise ValueError("Bin width (n) must be a positive integer.")
@@ -45,6 +71,19 @@ def plot_numeric_distribution(df, first, last, col, n=1, size = (10, 5), rotatio
 
 
 def plot_categoric_distribution(df, col, size = (8, 4), color='mako', rotation=45):
+    """
+    Plots the distribution of a categorical column, showing the count of each unique value.
+
+    Parameters:
+    - df (pd.DataFrame): The DataFrame containing the data.
+    - col (str): The name of the categorical column to analyze.
+    - size (tuple, optional): The size of the plot as (width, height). Defaults to (8, 4).
+    - color (str, optional): The color palette for the bars. Defaults to 'mako'.
+    - rotation (int, optional): The rotation angle for x-axis labels. Defaults to 45.
+
+    Returns:
+    - None: Displays a bar plot showing the counts of each unique value in the categorical column.
+    """
 
     plt.figure(figsize=size)
 
@@ -67,6 +106,16 @@ def plot_categoric_distribution(df, col, size = (8, 4), color='mako', rotation=4
 
 
 def plot_correlation_matrix(df, size = (5, 5)):
+    """
+    Plots the correlation matrix of numeric columns in a DataFrame as a heatmap.
+
+    Parameters:
+    - df (pd.DataFrame): The DataFrame containing the data.
+    - size (tuple, optional): The size of the plot as (width, height). Defaults to (5, 5).
+
+    Returns:
+    - None: Displays a triangular heatmap of the correlation matrix with annotations.
+    """
 
     corr_matrix = df.corr(numeric_only=True)
     plt.figure(figsize=size)
@@ -81,6 +130,17 @@ def plot_correlation_matrix(df, size = (5, 5)):
     
 
 def plot_relation_tv_numeric(df, tv, size = (15, 10)):
+    """
+    Plots scatter plots showing the relationship between a target variable and all numeric columns in the DataFrame.
+
+    Parameters:
+    - df (pd.DataFrame): The DataFrame containing the data.
+    - tv (str): The name of the target variable to analyze.
+    - size (tuple, optional): The size of the entire plot grid as (width, height). Defaults to (15, 10).
+
+    Returns:
+    - None: Displays scatter plots of the target variable against each numeric column.
+    """
     
     df_num = df.select_dtypes(include = np.number)
     cols_num = df_num.columns
@@ -112,8 +172,16 @@ def plot_relation_tv_numeric(df, tv, size = (15, 10)):
     plt.tight_layout()
 
 
-
 def plot_outliers(df):
+    """
+    Plots boxplots for all numeric columns in the DataFrame to visualize outliers.
+
+    Parameters:
+    - df (pd.DataFrame): The DataFrame containing the data.
+
+    Returns:
+    - None: Displays a grid of boxplots for each numeric column, showing potential outliers.
+    """
 
     df_num = df.select_dtypes(include = np.number)
     cols_num = df_num.columns
@@ -140,15 +208,40 @@ def plot_outliers(df):
     # Remove last plot, if empty
     if n_plots % 2 != 0:
         fig.delaxes(axes[-1])
+
     plt.tight_layout()
+    plt.show()
 
 
 def value_counts(df, col):
+    """
+    Calculates the value counts and proportions for a specified column in a DataFrame.
+
+    Parameters:
+    - df (pd.DataFrame): The DataFrame containing the data.
+    - col (str): The name of the column to analyze.
+
+    Returns:
+    - (pd.DataFrame): A DataFrame with two columns: the counts and proportions (rounded to two decimal places) of each unique value in the specified column.
+    """
 
     return pd.concat([df[col].value_counts(), df[col].value_counts(normalize=True).round(2)], axis=1)
 
 
 def quick_plot_numeric(df, col, num=10, size=(10,5), rotation=45):
+    """
+    Generates a quick histogram plot for a numeric column, dividing the data into a specified number of bins.
+
+    Parameters:
+    - df (pd.DataFrame): The DataFrame containing the data.
+    - col (str): The name of the numeric column to plot.
+    - num (int, optional): The number of bins to divide the range into. Defaults to 10.
+    - size (tuple, optional): The size of the plot as (width, height). Defaults to (10, 5).
+    - rotation (int, optional): The rotation angle for x-axis labels. Defaults to 45.
+
+    Returns:
+    - None: Displays a histogram of the numeric column if the bin width is greater than or equal to 2.
+    """
 
     max_ = df[col].max()
     min_ = df[col].min()
@@ -161,7 +254,21 @@ def quick_plot_numeric(df, col, num=10, size=(10,5), rotation=45):
 
 
 def plot_groupby_median(df, groupby, col, max_entries, size=(12, 6), palette='mako'):
+    """
+    Plots the median values of a numeric column grouped by a specified categorical column.
 
+    Parameters:
+    - df (pd.DataFrame): The DataFrame containing the data.
+    - groupby (str): The name of the categorical column to group by.
+    - col (str): The name of the numeric column for which medians are calculated.
+    - max_entries (int): The maximum number of group entries to display.
+    - size (tuple, optional): The size of the plot as (width, height). Defaults to (12, 6).
+    - palette (str, optional): The color palette for the bar plot. Defaults to 'mako'.
+
+    Returns:
+    - None: Displays a bar plot of the median values per group.
+    """
+    
     median_by = (
         df.groupby(groupby)[col]
         .median()

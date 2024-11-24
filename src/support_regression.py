@@ -56,20 +56,6 @@ def df_results(real, predicted, dataset, model):
 class RegressionModels:
     """
     A class for managing regression models, including dataset preparation, model training, evaluation, and visualization.
-
-    Attributes:
-    - df (pd.DataFrame): The input DataFrame containing features and the target variable.
-    - target_variable (str): The name of the target variable column in the DataFrame.
-    - X (pd.DataFrame): The feature matrix after dropping the target variable.
-    - y (pd.Series): The target variable values.
-    - X_train (pd.DataFrame): Training set features.
-    - X_test (pd.DataFrame): Test set features.
-    - y_train (pd.Series): Training set target values.
-    - y_test (pd.Series): Test set target values.
-    - models (dict): A dictionary of initialized models including Linear Regression, Decision Tree, Random Forest, Gradient Boosting, and XGBoost.
-    - predictions (dict): A dictionary to store predictions for each model on training and test sets.
-    - best_model (dict): A dictionary to store the best model for each algorithm.
-    - results (pd.DataFrame or None): A DataFrame containing model predictions and residuals or None if no results are available.
     """
 
     def __init__(self, df, target_variable, frac=0.8, seed=42):
