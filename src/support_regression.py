@@ -304,3 +304,40 @@ class RegressionModels:
 
         plt.tight_layout()
         plt.show()
+
+
+    def plot_best_model(self, results, model):
+        # GridSearchCV results
+        results_df = pd.DataFrame(results)
+
+        # Extract the impact of each main parameter
+        impact = results_df[['param_max_depth', 
+                            'param_min_samples_split', 
+                            'param_min_samples_leaf',
+                            'param_max_leaf_nodes', 
+                            'mean_test_score']]
+
+        # Mean test positive
+        impact['mean_test_score'] = -impact['mean_test_score'] 
+
+        # Visualization
+        fig, axes = plt.subplots(2, 2, figsize=(15, 10))
+        axes = axes.flat
+        params = impact.columns[:-1]
+
+        for i, cols in enumerate(params):
+
+            df_res = impact.groupby(cols)['mean_test_score'].mean().reset_index()
+
+            df_res['sqrt_mean_test_score'] = np.sqrt(df_res['mean_test_score'])
+
+            sns.lineplot(x = cols, y = "sqrt_mean_test_score", data = df_res, ax = axes[i])
+            axes[i].set_xlabel(cols.replace('param_', ''))
+            axes[i].set_ylabel('Root Mean Squared Error (RMSE)')
+            axes[i].grid(True)
+
+        plt.tight_layout()
+
+        # Best model
+        print("Best model:")
+        print(self.best_model[model])
