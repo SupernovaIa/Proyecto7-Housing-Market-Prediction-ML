@@ -1,67 +1,80 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
+import pickle
 
+from category_encoders import TargetEncoder
+from sklearn.preprocessing import StandardScaler
+from sklearn.ensemble import RandomForestRegressor
+
+from src.support_st import *
+
+# Config
 st.set_page_config(
-    page_title="House pricing predictor",
+    page_title="Las casas de David",
     page_icon="🏠",
-    layout="centered"
+    layout="centered",
 )
 
-st.title("House pricing prediction ML-powered 🔮")
-st.write("Use this app to predict your home price")
+# Title and description
+st.title("🏠 House price prediction using ML 🔮")
+st.write("Use this app to predict future (in terms of real estate) 🚀")
 
-st.markdown("""### Notas
+# Mostrar una imagen llamativa
+st.image(
+    "https://cdn.midjourney.com/4f7d8a55-1d31-4e80-b726-26050bde3bd8/0_1.png",
+    caption="Your next investment is here"
+)
 
----
+# Load model
+model = load_models()
 
-Mirar qqplot para normalidad""")
+municipalities, types, provinces = load_options()
 
-st.image("https://cdn.midjourney.com/96cb8658-e9f0-46a1-890b-0614391245f3/0_0.png",
-         caption="Tu próximo hogar")
 
-# Columnas
+# Forms
+st.header("🔧 Features")
 col1, col2 = st.columns(2)
+col3, col4 = st.columns(2)
+col5, col6 = st.columns(2)
 
 with col1:
-    barrio = st.selectbox("Barrio", ["A", "B", "C"])
-    st.write(barrio)
-    tipo_casa = st.selectbox("Tipo de casa", ["Casa", "Piso", "Castillo"])
-    st.write(tipo_casa)
+    propertyType = st.selectbox("House Type", types, help="Select house type.")
+    rooms = st.selectbox("Number of rooms", [0, 1, 2, 3, 4, 5, 6],help="Select number of rooms.")
 
 with col2:
-    habitaciones = st.number_input("Número de habitaciones", min_value=1, max_value=7, step=1)
-    st.write(habitaciones)
-    area = st.number_input("Tamaño (m2)", min_value=1, max_value=700, step=10)
-    st.write(area)
+    size = st.number_input("Size in sq meters", min_value=10, max_value=300, value=80, step=10, help="Select the size of your house.")
+    bathrooms = st.selectbox("Number of bathrooms", [1, 2, 3],help="Select number of bathrooms.")
 
-diccionario_respuesta = {
-    "Rooms": habitaciones,
-    "HouseType": tipo_casa,
-    "Neighborhood": barrio,
-    "Area": area
-}
+with col3:
+    floor = st.selectbox("Floor", ['ss', 'st', 'bj', 'en', '1', '2', '3', '4', '5', '6', '7', '8', 'unknown'], help="Select floor.")
+    municipality = st.selectbox("Municipality", municipalities, help="Select municipality.")
 
-df_pred = pd.DataFrame(diccionario_respuesta, index = [0])
+with col4:
+    hasLift = st.selectbox("Has lift?", ['Yes', 'No'], help="Select if you want lift.")
 
-st.table(df_pred)
+    if hasLift == 'Yes':
+        hasLift = True
+    else:
+        hasLift = False
 
-df_pred_copy = df_pred.copy()
+    exterior = st.selectbox("Exterior", ['Yes', 'No'],help="Select if you want an exterior house.")
 
-# Carga de los modelos
-#target, standard, modelo = sm.load_models()
+    if exterior == 'Yes':
+        exterior = True
+    else:
+        exterior = False
 
-numeric_col = df_pred.select_dtypes(include = np.number)
+with col5:
+    province = st.selectbox("Province", provinces, help="Select province.")
 
-if st.button("Predecir precio"):
+with col6:
+    distance = st.number_input("Distance",  min_value=0, max_value=60000, value=1000, step=500, help="Select how far you want to be from center (m).")
 
-    # Estandarizar numéricas
-    #df_pred_copy[numeric_col] = standard.transform(df_pred_copy[numeric_col])
 
-    # Encoding (a target se le pasa todo el df)
-    #df_pred_copy[df_pred_copy.columns] = target.transform(df_pred_copy)
+# Prediction
+if st.button("💡 Predict price"):
 
-    #prediccion = modelo.predict(df_pred_copy)
-    #st.write(prediccion[0])
-
+    pred = get_prediction(model, propertyType, size, exterior, rooms, bathrooms, distance, floor, municipality, province, hasLift, numPhotos=20)
+    # Show results
+    st.success(f"💵 Expected price is: {round(pred[0],2)} €")
     st.balloons()
