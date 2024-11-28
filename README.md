@@ -1,6 +1,6 @@
 # Real Estate price prediction project in Madrid
 
-![Real Estate](https://cdn.midjourney.com/4f7d8a55-1d31-4e80-b726-26050bde3bd8/0_1.png)
+![Real Estate](https://github.com/user-attachments/assets/d0951fca-72a3-406e-91d9-8deb5ac367f0)
 
 ## 📜 Project Overview
 
